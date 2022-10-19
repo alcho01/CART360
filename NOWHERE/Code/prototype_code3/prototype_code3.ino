@@ -23,10 +23,10 @@ Servo servo3;
 Servo servo4;
 
 //Angle of servo for each seperate 
-int angleServo1 = 0;
-int angleServo2 = 0;
-int angleServo3 = 0;
-int angleServo4 = 0;
+int angleServo1 = 90;
+int angleServo2 = 90;
+int angleServo3 = 90;
+int angleServo4 = 90;
 
 //Delay 
 int delaying = 0;
@@ -36,9 +36,6 @@ int currentMovementState;
 
 //Sound Value currently off
 boolean soundVal = 0;
-//Start the Servos off
-boolean SERVOStatus = false;
-
 
 //Buzzer Sounds
 void buzzerSFX() {
@@ -69,7 +66,7 @@ void buzzerSFX() {
 //Setup the pins to the servos | Set inputs & Outputs | Determine the current movement status
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(57600);
   
  //Assign what pin goes with what servo
  servo1.attach(SERVO_PIN1);
@@ -100,12 +97,14 @@ void loop() {
 
   //Check if the motion sensor is activated
   if (currentMovementState == HIGH) { 
+    Serial.println("ON");
     //Call buzzerSFX function
      buzzerSFX();
     }
     else {
       //The buzzer turns off
       digitalWrite(BUZZER, LOW);
+      Serial.println("OFF");
       //Add another delay
       delay(1000);
     }
@@ -116,8 +115,8 @@ void loop() {
   soundVal = digitalRead(SOUND_SENSOR_PIN);
   Serial.println(soundVal);
   //
-  if (soundVal == HIGH && SERVOStatus == false) {
-    SERVOStatus = true;
+  if (soundVal == HIGH ) {
+    Serial.println("PANIC");
     //Rotate the servos randomly
     angleServo1 = random(10,180);
     angleServo2 = random(10,180);
@@ -136,9 +135,7 @@ void loop() {
     delay(delaying);
   }
   else {
-    //Return to false
-    SERVOStatus = false;
-    
+    Serial.println("RELAX");
     //Set servos angles to 0 degrees
     angleServo1 = (0);
     angleServo2 = (0);
