@@ -37,6 +37,8 @@ int currentMovementState;
 //Sound Value currently off
 boolean soundVal = 0;
 
+boolean communicate = false;
+
 //Buzzer Sounds
 void buzzerSFX() {
 //Play the buzzer sound B note
@@ -100,22 +102,24 @@ void loop() {
     Serial.println("ON");
     //Call buzzerSFX function
      buzzerSFX();
+     communicate = true;
     }
     else {
       //The buzzer turns off
       digitalWrite(BUZZER, LOW);
       Serial.println("OFF");
+      communicate = false;
       //Add another delay
-      delay(1000);
+      delay(400);
     }
 
   //BUZZER TO SOUND SENSOR TO SERVO COMMUNICATION
 
   //Get value of current sound
   soundVal = digitalRead(SOUND_SENSOR_PIN);
-  Serial.println(soundVal);
+ // Serial.println("heard");
   //
-  if (soundVal == HIGH ) {
+  if (soundVal == HIGH && communicate == true) {
     Serial.println("PANIC");
     //Rotate the servos randomly
     angleServo1 = random(10,180);
