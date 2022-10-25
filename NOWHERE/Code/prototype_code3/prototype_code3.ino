@@ -1,53 +1,60 @@
+/*The code is pretty straight forward and simple. It focuses on the communication between user movement enabling the buzzer to sound off, notifying
+the user that movement was detected. I added a buzzerSFX function to generate 3 tones creating a "panic" type sound. When the buzzer sounds off the
+servo motors will increase in speed based on the delayer value decreasing. The motors will then return to the original "relaxed" state.
+
+*/
+
 //Include servo library
 #include <Servo.h> 
+
+//PIR SENSOR 
 
 //Set pin for PIR sensor
 int PIR_SENSOR_PIN = 2;
 
-//Set pin for Sound sensor
-int SOUND_SENSOR_PIN = 10;
+//Set a variable for if motion is detected or not
+int currentMovementState = LOW;
 
-//Set pin for Buzzer
+//Pin Status
+int value = 0; 
+
+//SOUND SENSOR
+
+//Set sound sensor pin to 2
+//int SOUND_SENSOR_PIN = 2;
+
+
+//PIEZO
+
+//set pin for buzzer
 int BUZZER = 11;
+//set initial delay
+int delayer = 15;
+
+
+//SERVO MOTORS
 
 //Set pins for servos
 int SERVO_PIN1 = 3;
-int SERVO_PIN2 = 5;
+int SERVO_PIN2 = 6;
 int SERVO_PIN3 = 8;
-int SERVO_PIN4 = 13;
 
 //Initialize the servos
+
 Servo servo1;
 Servo servo2;
 Servo servo3;
-Servo servo4;
 
-//Angle of servo for each seperate 
-int angleServo1 = 90;
-int angleServo2 = 90;
-int angleServo3 = 90;
-int angleServo4 = 90;
-
-//Delay 
-int delaying = 0;
-
-//State of movement 
-int currentMovementState;
-
-//Sound Value currently off
-boolean soundVal = 0;
-
-boolean communicate = false;
-
-//Buzzer Sounds
+//Buzzer function to produce "Panic Sound"
 void buzzerSFX() {
-//Play the buzzer sound B note
+  
+//Play the buzzer sound
   tone(BUZZER, 493);
   //Delay 
   delay(300);
   //Stop the buzzer 
   noTone(BUZZER);
-
+  
 //Play the buzzer sound 
   tone(BUZZER, 293);
   //Delay 
@@ -64,97 +71,68 @@ void buzzerSFX() {
 }
 
 
-
-//Setup the pins to the servos | Set inputs & Outputs | Determine the current movement status
-
 void setup() {
+  //Testing purposes
   Serial.begin(57600);
-  
- //Assign what pin goes with what servo
- servo1.attach(SERVO_PIN1);
- servo2.attach(SERVO_PIN2);
- servo3.attach(SERVO_PIN3);
- servo4.attach(SERVO_PIN4);
 
- //PIR sensor acts as input
+  //Read if there is movement via digital
+  value = digitalRead(PIR_SENSOR_PIN);
+
+  //Assign the pin to the servos
+  servo1.attach(SERVO_PIN1);
+  servo2.attach(SERVO_PIN2);
+  servo3.attach(SERVO_PIN3);
+
+  //Set inputs and outputs
+
+  //PIR as input - Whats going in
   pinMode(PIR_SENSOR_PIN, INPUT);
-  
- //sound sensor acts as input/whats going in
-  pinMode(SOUND_SENSOR_PIN, INPUT);
-  
- //buzzer acts as output
-  pinMode(BUZZER, OUTPUT);
 
- //Tell if there is movement or not
-  currentMovementState = digitalRead(PIR_SENSOR_PIN);
+  //Buzzer as output - Whats going out
+  pinMode(BUZZER, OUTPUT);
 }
 
-//
+
+
+
 
 void loop() {
-  //Tell if there is movement or not
-  currentMovementState = digitalRead(PIR_SENSOR_PIN);
-
-  //MOVEMENT TO BUZZER COMMUNICATION
-
-  //Check if the motion sensor is activated
-  if (currentMovementState == HIGH) { 
-    Serial.println("ON");
-    //Call buzzerSFX function
-     buzzerSFX();
-     communicate = true;
+  //Read if there is movement via digital
+  value = digitalRead(PIR_SENSOR_PIN);
+  if (value == HIGH) {
+    //Play the buzzer sound
+    buzzerSFX();
+    //If the motion is detected set the delay speed to 5, to make the rotation speed faster
+    delayer = 5;
+  if (currentMovementState == LOW) {
+    Serial.println("DETECTED");
+    currentMovementState == HIGH;
     }
-    else {
-      //The buzzer turns off
-      digitalWrite(BUZZER, LOW);
-      Serial.println("OFF");
-      communicate = false;
-      //Add another delay
-      delay(400);
-    }
-
-  //BUZZER TO SOUND SENSOR TO SERVO COMMUNICATION
-
-  //Get value of current sound
-  soundVal = digitalRead(SOUND_SENSOR_PIN);
- // Serial.println("heard");
-  //
-  if (soundVal == HIGH && communicate == true) {
-    Serial.println("PANIC");
-    //Rotate the servos randomly
-    angleServo1 = random(10,180);
-    angleServo2 = random(10,180);
-    angleServo3 = random(10,180);
-    angleServo4 = random(10,180);
-
-    //Delay set to random int between two parameters
-    delaying = random(100, 500);
-
-    //Make the servos function
-    servo1.write(angleServo1);
-    servo2.write(angleServo2);
-    servo3.write(angleServo3);
-    servo4.write(angleServo4);
-    //Add the delay
-    delay(delaying);
   }
   else {
-    Serial.println("RELAX");
-    //Set servos angles to 0 degrees
-    angleServo1 = (0);
-    angleServo2 = (0);
-    angleServo3 = (0);
-    angleServo4 = (0);
 
-    //Turn the servos back to an angle at 0 degrees
-    servo1.write(angleServo1);
-    servo2.write(angleServo2);
-    servo3.write(angleServo3);
-    servo4.write(angleServo4);
-
-    //Add the delay
-    delay(delaying);
+   //if (currentMovementState == HIGH) {
+    Serial.println("STOPPED");
+    currentMovementState == LOW;
+    //If no movement keep the delayer at 15 seconds
+    delayer = 15;
+   }
+  //}
+  //Servo rotates from 0 degrees to 180 degrees at a constant speed throughout the entire program
+  for (int i = 0; i < 90; i++) {
+    servo1.write(i);
+    servo2.write(i);
+    servo3.write(i);
+    //Add a delay based on if there is detection or not 
+    delay(delayer);
   }
-
-  //
+  //Servo rotates from 180 degrees to 0 degrees at a constant speed throughout the entire program
+   for (int i = 90; i < 0; i--) {
+    servo1.write(i);
+    servo2.write(i);
+    servo3.write(i);
+    //Add a delay based on if there is detection or not 
+    delay(delayer);
+  }
+  
 }
