@@ -10,19 +10,13 @@ servo motors will increase in speed based on the delayer value decreasing. The m
 //PIR SENSOR 
 
 //Set pin for PIR sensor
-int PIR_SENSOR_PIN = 2;
+int PIR_SENSOR_PIN = 12;
 
 //Set a variable for if motion is detected or not
 int currentMovementState = LOW;
 
 //Pin Status
 int value = 0; 
-
-//SOUND SENSOR
-
-//Set sound sensor pin to 2
-//int SOUND_SENSOR_PIN = 2;
-
 
 //PIEZO
 
@@ -111,13 +105,12 @@ void loop() {
   }
   else {
 
-   //if (currentMovementState == HIGH) {
     Serial.println("STOPPED");
     currentMovementState == LOW;
     //If no movement keep the delayer at 15 seconds
     delayer = 15;
    }
-  //}
+   
   //Servo rotates from 0 degrees to 180 degrees at a constant speed throughout the entire program
   for (int i = 0; i < 90; i++) {
     servo1.write(i);
