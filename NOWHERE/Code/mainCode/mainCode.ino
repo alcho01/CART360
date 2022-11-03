@@ -30,11 +30,23 @@ int servo3 = 15;
 int PIR_SENSOR_PIN = 12;
 
 //Set a variable to determine if motion is detected or not
-int currentMovementState = LOW;
+//int currentMovementState = LOW;
+//No motion at the start of the program
+int currentMovementState = true;
 
-//Sensor Status
+//Sensor Status 
 int value = 0;
 
+// When the sensor is low, it stays high for this duration
+int timeAfterPIRLow = 5000;
+
+long unsigned int timeTurnedLow;
+
+//read when the sensor turns off
+boolean readLowTime; 
+
+//I researched that it takes roughly 10 to 60 seconds to calibrate the sensor.
+int calibratePIR = 30;
 //PIEZO
 
 //set pin for the buzzer
@@ -97,12 +109,22 @@ void setup() {
 
   //Buzzer as output - Whats going out
   pinMode(BUZZER_PIN, OUTPUT);
+
+  //Sensor is off
+  readLowTime = LOW;
+
+  //For testing to see when calibration is complete
+  Serial.println("Calibrating Sensor");
+  //Convert time to milliseconds
+  delay(calibratePIR * 1000);
+  //For testing to see when calibration is complete
+  Serial.println("Calibration Complete");
 }
 
 void loop() {
   //Read if there is movement via digital
   value = digitalRead(PIR_SENSOR_PIN);
-  //When movement is detected...
+  //Check to see if the input is high
   if (value == HIGH) {
     //Play the buzzer sound
     buzzerSFX();
@@ -112,17 +134,26 @@ void loop() {
   if (currentMovementState == LOW) {
     //Read the given line for testing purposes to see if it works
     Serial.println("DETECTED");
-    currentMovementState == HIGH;
+    currentMovementState = HIGH;
     }
   }
   else {
     //Read the given line for testing purposes to see if it works
-    Serial.println("STOPPED");
-    //Set the movement state to low 
-    currentMovementState == LOW;
+   // Serial.println("STOPPED");
+    //turning it off 
+    if (currentMovementState == HIGH) {
+      Serial.println("STOPPED");
+      currentMovementState = LOW;
+      //If no movement keep the delayer at 5 seconds
+      delayer = 5;
+      //Count the millis when the PIR goes low
+      timeTurnedLow = millis();
+    }
+   // currentMovementState == LOW;
     //If no movement keep the delayer at 5 seconds
-    delayer = 5;
+   // delayer = 5;
    }
+   
    /* Create a for loop that runs throughout the program and only changes state depending on if movement is detected.
    This for loop goes from the servo minimum to the servo maximum */
    for (int i = servoMin; i <= servoMax; i++) {
@@ -138,4 +169,11 @@ void loop() {
      pwm3.setPWM(servo3, 0, i);
      delay(delayer);
     }
+
+        //Check to see if enough time has passed 
+    if (!currentMovementState && (millis() - timeTurnedLow) > timeAfterPIRLow) {
+      Serial.println("Time High Ended");
+      noTone(BUZZER_PIN); //Turn off the buzzer if it is playing
+    }
+    //delay(1000);
   }
