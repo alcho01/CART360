@@ -1,47 +1,13 @@
-//Include the Adafruit PWM Servo library because I am utilizing the PCA9685 Servo Shield 
+//Include the Adafruit PWM Servo library for the utilization of the PCA9685 Servo Shield
 #include <Adafruit_PWMServoDriver.h>
+//Include Pitches to play my melodies
 #include "pitches.h"
-/* SERVO */
 
+/* SERVO */
 //Create 3 variables to be called for the servo motors
 Adafruit_PWMServoDriver pwm1 = Adafruit_PWMServoDriver(0x40);
 Adafruit_PWMServoDriver pwm2 = Adafruit_PWMServoDriver(0x40);
 Adafruit_PWMServoDriver pwm3 = Adafruit_PWMServoDriver(0x40);
-
-int melody [ ] = {
-   NOTE_G4, NOTE_F4, NOTE_E4, NOTE_D4, NOTE_D4, NOTE_D4, NOTE_D4, NOTE_D4, NOTE_C4, NOTE_D4, NOTE_D4, NOTE_D4, NOTE_C4, NOTE_D4, NOTE_E4
-};
-
-int melody2 [ ] = {
-   NOTE_C4, NOTE_C4, NOTE_C4, NOTE_D4, NOTE_E4, 0, NOTE_D4, NOTE_D4, NOTE_D4, NOTE_D4, NOTE_C4, NOTE_D4, NOTE_D4, NOTE_C4, NOTE_D4, NOTE_D4, NOTE_C4, NOTE_D4, NOTE_D4, NOTE_D4, NOTE_E4, NOTE_D4, NOTE_C4, NOTE_A4,
-};
-
-int melody3 [ ] = {
-  NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_D4, NOTE_D4, NOTE_D4, NOTE_D4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_D4, NOTE_D4, NOTE_D4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_D4, NOTE_D4, NOTE_D4, NOTE_D4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4,
-};
-
-int melody4 [ ] = {
-  NOTE_D4, NOTE_G4, NOTE_F4, NOTE_E4, NOTE_D4, 
-};
-
-int noteDurations[] = {
-  4, 4, 4, 2, 4, 4, 4, 4, 4, 4, 4, 4, 4, 2, 2
-};
-
-int noteDurations2[] = {
-  4, 4, 4, 4, 3, 4, 3, 4, 4, 4, 4, 3, 4, 4, 3, 4, 4, 4, 4, 4, 4, 4, 4, 3
-};
-
-int noteDurations3[] = {
-  4, 4, 4, 4, 4, 4, 3, 4, 4, 4, 4, 4, 4, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-};
-
-int noteDurations4[] = {
-  4, 8, 4, 8, 4
-};
-
-//delayer
-int delayer = 5;
 
 /* Determine the Minimum and Maximum pulse length count. I played around with these numbers till I was
 satisfied with the outcome */
@@ -51,6 +17,15 @@ int servoMaxStateRelax = 250;
 int servoMinStatePanic = 350;
 int servoMaxStatePanic = 650;
 
+//Set the Servo Frequency
+int servoFreq = 50;
+
+//Determine the pin output for each servo on the shield
+int servo1 = 0;
+int servo2 = 8;
+int servo3 = 15;
+
+//Servo Timers
 //Timer Variables for the panic state
 int timeAfterStatePanicServo1 = 1500;
 int timeAfterStatePanicServo2 = 2000;
@@ -63,25 +38,21 @@ long unsigned int timeTurnedLowServo2;
 long unsigned int timeTurnedLowServo3;
 long unsigned int timeOverFinisher;
 
+//Bools to check ServoTimes
 bool checkTimerActivationServo1 = false;
 bool checkTimerActivationServo2 = false;
 bool checkTimerActivationServo3 = false;
 bool timeOver = false;
 
-//Set the Servo Frequency
-int servoFreq = 50;
+//Delayer
 
-//Determine the pin output for each servo on the shield
-int servo1 = 0;
-int servo2 = 8;
-int servo3 = 15;
+int delayer = 5;
 
-/*PIR SENSOR*/ 
+
+/* PIR SENSOR */
 
 //Set pin for PIR Sensor
-int PIR_SENSOR_PIN = 12;
-
-//Set a variable to determine if motion is detected or not
+int PIR_SENSOR_PIN = 0;
 
 //No motion at the start of the program
 int currentMovementState = true;
@@ -100,25 +71,71 @@ boolean readLowTime;
 //I researched that it takes roughly 10 to 60 seconds to calibrate the sensor.
 int calibratePIR = 30;
 
-/*Amplifier and Surface Transducer*/
 
-//Set the pin for the amplifier
+/* Surface Transducer */
 
-int AMP_PIN = 11; 
+int SPEAKER_PIN = 12; 
 
-/*Vibration Sensors*/
 
-//Set the pins for the vibration sensors
+/* Vibration Sensors */
 
+//Set pins
 int diskPin1 = A0;
 int diskPin2 = A3;
-int diskPin3 = A8;
+int diskPin3 = A7;
 
+//Set a threshold to see if the sensor goes over it
+int threshold = 100;
+
+//Set a variable to read the vibration
+int sensorVibReading1 = 0;
+int sensorVibReading2 = 0;
+int sensorVibReading3 = 0;
+
+
+/* Sounds */
+
+//Melodies
+int melody [ ] = {
+   NOTE_G4, NOTE_F4, NOTE_E4, NOTE_D4, NOTE_D4, NOTE_D4, NOTE_D4, NOTE_D4, NOTE_C4, NOTE_D4, NOTE_D4, NOTE_D4, NOTE_C4, NOTE_D4, NOTE_E4
+};
+
+int melody2 [ ] = {
+   NOTE_C4, NOTE_C4, NOTE_C4, NOTE_D4, NOTE_E4, 0, NOTE_D4, NOTE_D4, NOTE_D4, NOTE_D4, NOTE_C4, NOTE_D4, NOTE_D4, NOTE_C4, NOTE_D4, NOTE_D4, NOTE_C4, NOTE_D4, NOTE_D4, NOTE_D4, NOTE_E4, NOTE_D4, NOTE_C4, NOTE_A4,
+};
+
+int melody3 [ ] = {
+  NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_D4, NOTE_D4, NOTE_D4, NOTE_D4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_D4, NOTE_D4, NOTE_D4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_D4, NOTE_D4, NOTE_D4, NOTE_D4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4,
+};
+
+int melody4 [ ] = {
+  NOTE_D4, NOTE_G4, NOTE_F4, NOTE_E4, NOTE_D4, 
+};
+
+//Durations of notes - Higher the number faster the note is and vice versa
+
+int noteDurations[] = {
+  4, 4, 4, 2, 4, 4, 4, 4, 4, 4, 4, 4, 4, 2, 2
+};
+
+int noteDurations2[] = {
+  4, 4, 4, 4, 3, 4, 3, 4, 4, 4, 4, 3, 4, 4, 3, 4, 4, 4, 4, 4, 4, 4, 4, 3
+};
+
+int noteDurations3[] = {
+  4, 4, 4, 4, 4, 4, 3, 4, 4, 4, 4, 4, 4, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+};
+
+int noteDurations4[] = {
+  4, 8, 4, 8, 4
+};
 
 void setup() {
-  //Testing purposes
+  //Debug purposes
   Serial.begin(57600);
 
+  /* Servos */
+  
   //Start each board
   pwm1.begin();
   pwm2.begin();
@@ -134,24 +151,13 @@ void setup() {
   pwm2.setPWMFreq(servoFreq);
   pwm3.setPWMFreq(servoFreq);
 
-  //SET INPUTS FOR VIBRATION SENSORS
-  //pinMode(diskPin1, INPUT);
-  //pinMode(diskPin2, INPUT);
-  //pinMode(diskPin3, INPUT);
-  //pinMode(diskPin4, INPUT);
+  /* PIR SENSOR */
 
   //Read if there is movement via digitalRead
   value = digitalRead(PIR_SENSOR_PIN);
 
   //PIR as input - Whats going in
   pinMode(PIR_SENSOR_PIN, INPUT);
-
-  pinMode(AMP_PIN, OUTPUT);
-
-  pinMode(diskPin1, INPUT);
-  pinMode(diskPin2, INPUT);
-  pinMode(diskPin3, INPUT);
-
 
   //Sensor is off
   readLowTime = LOW;
@@ -162,99 +168,110 @@ void setup() {
   delay(calibratePIR * 1000);
   //For testing to see when calibration is complete
   Serial.println("Calibration Complete");
+
+  /* SPEAKER */
+
+  pinMode(SPEAKER_PIN, OUTPUT);
+  
 }
 
 void loop() {
   relaxed();
+  panic();
   checkForMovement();
   checkForVibration();
 }
 
+/* ALARMS */
 
-void relaxedAlarm() {
-  
-}
+/* 
+   AREA A, B, C are concerned with the vibration sensors scattered along the environment.
+   When the requirement of a certain area is met, a melody will produce based on the pitches.h file.
+   I made areas A, B, C, have a melody that fits together. Therefore, if all alarms are triggered in the correct sequence it will be a full flowing melody.
+   The Panic Alarm just notifies the user when movement via the PIR sensor is detected.
+*/
 
+//Area A
 void areaAAlarm() {
 
     for (int thisNote = 0; thisNote < 15; thisNote++) {
     int noteDuration = 1000 / noteDurations[thisNote];
-
-    tone(AMP_PIN, melody[thisNote], noteDuration);
+    
+    tone(SPEAKER_PIN, melody[thisNote], noteDuration);
 
       int pauseBetweenNotes = noteDuration * 1.30;
 
     delay(pauseBetweenNotes);
 
-    noTone(AMP_PIN);
+    noTone(SPEAKER_PIN);
   }
-
 }
 
+//Area B
 void areaBAlarm() {
 
     for (int thisNote = 0; thisNote < 24; thisNote++) {
     int noteDuration = 1000 / noteDurations2[thisNote];
 
-    tone(AMP_PIN, melody2[thisNote], noteDuration);
+    tone(SPEAKER_PIN, melody2[thisNote], noteDuration);
 
       int pauseBetweenNotes = noteDuration * 1.10;
 
     delay(pauseBetweenNotes);
 
-    noTone(AMP_PIN);
+    noTone(SPEAKER_PIN);
   }
-  
 }
 
+//Area C
 void areaCAlarm(){
 
   for (int thisNote = 0; thisNote < 28; thisNote++) {
     int noteDuration = 1000 / noteDurations3[thisNote];
 
-    tone(AMP_PIN, melody3[thisNote], noteDuration);
+    tone(SPEAKER_PIN, melody3[thisNote], noteDuration);
 
       int pauseBetweenNotes = noteDuration * 1.10;
 
     delay(pauseBetweenNotes);
 
-    noTone(AMP_PIN);
+    noTone(SPEAKER_PIN);
   }
-  
 }
 
+//Panic Alarm
 void panicAlarm() {
 
    for (int thisNote = 0; thisNote < 5; thisNote++) {
     int noteDuration = 1000 / noteDurations4[thisNote];
 
-    tone(AMP_PIN, melody4[thisNote], noteDuration);
+    tone(SPEAKER_PIN, melody4[thisNote], noteDuration);
 
       int pauseBetweenNotes = noteDuration * 1.10;
 
     delay(pauseBetweenNotes);
 
-    noTone(AMP_PIN);
-  }
-  
+    noTone(SPEAKER_PIN);
+  } 
 }
 
+/* 
+  This function checks for movement from the PIR sensor.
+  When it detects movement the panic alarm activates, the timer for servo1 commences, and the bool of servo1 turns true.
+  If no movement is detected it does the opposite.
+
+  This function will transition from relaxed state to panic state & panic state to relaxed state.
+
+*/
 void checkForMovement() {
   //Read if there is movement via digital
   value = digitalRead(PIR_SENSOR_PIN);
   //Check to see if the input is high
   if (value == HIGH) {
-    //Play the buzzer sound
-    //buzzerSFX();
     panicAlarm();
-    panic();
-    //If the motion is detected set the delay speed to 1, to make the rotation speed faster
-     delayer = 1;
    //Count the millis when the panic state activates
    timeTurnedLowServo1 = millis();
    checkTimerActivationServo1 = true;
-   //timeTurnedLowServo2 = millis();
-   //timeTurnedLowServo3 = millis();
     //Change the currentmovement state to high if it is low
   if (currentMovementState == LOW) {
     //Read the given line for testing purposes to see if it works
@@ -262,10 +279,8 @@ void checkForMovement() {
     currentMovementState = HIGH;
     }
   }
-  
-  else {
-    //Read the given line for testing purposes to see if it works
-   // Serial.println("STOPPED");
+
+    else {
     //turning it off 
     if (currentMovementState == HIGH) {
       Serial.println("STOPPED");
@@ -275,59 +290,65 @@ void checkForMovement() {
       //Count the millis when the PIR goes low
       timeTurnedLow = millis();
       relaxed();
-//      resetter();
-
       //Check to see if enough time has passed 
    if (!currentMovementState && (millis() - timeTurnedLow) > timeAfterPIRLow) {
      Serial.println("Time High Ended");
-      noTone(AMP_PIN); //Turn off the buzzer if it is playing
+      noTone(SPEAKER_PIN); //Turn off the buzzer if it is playing
    }
-   //delay(1000);  
   }
  }
 }
 
+/*
+  This function checks for vibration from any of the following vibration sensors.
+  Each pin is connected to an analog in pin that translates an int to the serial monitor.
+  If the value of the int is greater than 100, the sensor will do it's specific tasks.
+*/
+
 void checkForVibration() {
-  int vibrationCheck = analogRead(diskPin1);
-  vibrationCheck = map(vibrationCheck, 0, 1023, 0, 20);
-  Serial.print("Threshold: ");
-  Serial.println(vibrationCheck);
-
   
+  int sensorVibReading1 = analogRead(diskPin1);
+  Serial.print("Threshold1: ");
+  Serial.println(sensorVibReading1);
 
-  int vibrationCheck2 = analogRead(diskPin2);
-  vibrationCheck2 = map(vibrationCheck2, 0, 1023, 21, 40);
-  Serial.print("Threshold2: ");
-  Serial.println(vibrationCheck2);
-
-  
-
-  int vibrationCheck3 = analogRead(diskPin3);
-  vibrationCheck3 = map(vibrationCheck3, 0, 1023, 41, 60);
-  Serial.print("Threshold3: ");
-  Serial.println(vibrationCheck3);
-
-  
-
-  if (vibrationCheck < 2) {
+    if (sensorVibReading1 >= threshold) {
      Serial.println("Area A detected");
      areaAAlarm();
-     presenceFeltA();
-     
- }
+     presenceFeltA();     
+  }
 
-  if (vibrationCheck2 <= 21) {
+  delay(100);
+
+  int sensorVibReading2 = analogRead(diskPin2);
+  Serial.print("Threshold2: ");
+  Serial.println(sensorVibReading2);
+
+    if (sensorVibReading2 >= threshold) {
      Serial.println("Area B detected");
      areaBAlarm();
      presenceFeltB();
   }
 
-  if (vibrationCheck3 < 42) {
+  delay(100);
+
+  int sensorVibReading3 = analogRead(diskPin3);
+  Serial.print("Threshold3: ");
+  Serial.println(sensorVibReading3);
+
+  if (sensorVibReading3 >= threshold) {
      Serial.println("Area C detected");
      areaCAlarm();
      presenceFeltC();
   } 
+
+  delay(100);
+  
 }
+
+/*
+  This function loops throughout the program.
+  It is the relaxed state meaning the servos will rotate back and forth at the same rotation until interaction occurs.
+*/
 
 void relaxed() {
 
@@ -346,60 +367,13 @@ void relaxed() {
    }
 }
 
-
-void presenceFeltA() {
-
-   for (int i = servoMinStateRelax; i <= servoMaxStateRelax; i++) {
-     //pwm1.setPWM(servo1, 0, i);
-     pwm2.setPWM(servo2, 0, i);
-     //pwm3.setPWM(servo3, 0, i);
-     delay(delayer);   
-   }
-
-   for (int i = servoMaxStateRelax; i >= servoMinStateRelax; i--) {  
-    // pwm1.setPWM(servo1, 0, i);
-     pwm2.setPWM(servo2, 0, i);
-    // pwm3.setPWM(servo3, 0, i);
-     delay(delayer);
-   }
-}
-
-void presenceFeltB() {
-
-   for (int i = servoMinStateRelax; i <= servoMaxStateRelax; i++) {
-     pwm1.setPWM(servo1, 0, i);
-     pwm2.setPWM(servo2, 0, i);
-     //pwm3.setPWM(servo3, 0, i);
-     delay(delayer);   
-   }
-
-   for (int i = servoMaxStateRelax; i >= servoMinStateRelax; i--) {  
-     pwm1.setPWM(servo1, 0, i);
-     pwm2.setPWM(servo2, 0, i);
-     //pwm3.setPWM(servo3, 0, i);
-     delay(delayer);
-   }
-}
-
-void presenceFeltC() {
-
-   for (int i = servoMinStateRelax; i <= servoMaxStateRelax; i++) {
-     //pwm1.setPWM(servo1, 0, i);
-     pwm2.setPWM(servo2, 0, i);
-     pwm3.setPWM(servo3, 0, i);
-     delay(delayer);   
-   }
-
-   for (int i = servoMaxStateRelax; i >= servoMinStateRelax; i--) {  
-     //pwm1.setPWM(servo1, 0, i);
-     pwm2.setPWM(servo2, 0, i);
-     pwm3.setPWM(servo3, 0, i);
-     delay(delayer);
-   }
-}
-  
-  
-
+/*
+ This function happens when human detection occurs.
+ What happens is that each servo gets isolated to a movement, and timer.
+ After the designated time passes for one servo the timer begins for the second servo and then the third until they all are rotating.
+ The speed is also set a bit faster by changing the delayer from 1 to 5.
+ At the end of the function everything gets reset back to the relaxed state.
+*/
 
 void panic() {
   
@@ -408,6 +382,7 @@ void panic() {
 
     timeTurnedLowServo2 = millis();
     checkTimerActivationServo2 = true;
+    delayer = 1; 
 
    for (int i = servoMinStatePanic; i <= servoMaxStatePanic ; i++) {
      pwm1.setPWM(servo1, 0, i);
@@ -429,6 +404,7 @@ void panic() {
 
     timeTurnedLowServo3 = millis();
     checkTimerActivationServo3 = true;
+    delayer = 1; 
 
    for (int i = servoMinStatePanic; i <= servoMaxStatePanic ; i++) {
      pwm1.setPWM(servo1, 0, i);
@@ -450,6 +426,7 @@ void panic() {
 
     timeOverFinisher = millis();
     timeOver = true;
+    delayer = 1; 
 
    for (int i = servoMinStatePanic; i <= servoMaxStatePanic ; i++) {
      pwm1.setPWM(servo1, 0, i);
@@ -468,6 +445,8 @@ void panic() {
   
   if (timeOver == true && (timeOverFinisher - previousTime) > timeFinisher) {
     Serial.println("stop");
+   delayer = 5; 
+    
    checkTimerActivationServo1 = false;
    checkTimerActivationServo2 = false;
    checkTimerActivationServo3 = false; 
@@ -479,9 +458,63 @@ void panic() {
   }
 }
 
+/*
+  This function is a child of sensorVibReading.
+  The servos will react based on the vibration it intakes.
+  Also I organized them by areas.
+  Therefore, Area A will occupy the center area of the environment, while Area B will take the left and Area C will take the right.
+*/
 
-//By default have the mirrors go up and down at a constant rate [DONE]
+//Area A (CENTER)
+void presenceFeltA() {
 
-//When motion is detected stop the mirrors to change states. A mirror at a time will translate along the Y-Axis gaining speed - When one mirror reaches the specified threshold the next mirror goes and it follows. [DONE]
+   for (int i = servoMinStateRelax; i <= servoMaxStateRelax; i++) {
+     //pwm1.setPWM(servo1, 0, i);
+     pwm2.setPWM(servo2, 0, i);
+     //pwm3.setPWM(servo3, 0, i);
+     delay(delayer);   
+   }
 
-//If the analog reading value of vibration reaches a specific threshold play a sound reverberating from the transducer and move the servos in a unique fashion
+   for (int i = servoMaxStateRelax; i >= servoMinStateRelax; i--) {  
+    // pwm1.setPWM(servo1, 0, i);
+     pwm2.setPWM(servo2, 0, i);
+    // pwm3.setPWM(servo3, 0, i);
+     delay(delayer);
+   }
+}
+
+//Area B (LEFT)
+void presenceFeltB() {
+
+   for (int i = servoMinStateRelax; i <= servoMaxStateRelax; i++) {
+     pwm1.setPWM(servo1, 0, i);
+     pwm2.setPWM(servo2, 0, i);
+     //pwm3.setPWM(servo3, 0, i);
+     delay(delayer);   
+   }
+
+   for (int i = servoMaxStateRelax; i >= servoMinStateRelax; i--) {  
+     pwm1.setPWM(servo1, 0, i);
+     pwm2.setPWM(servo2, 0, i);
+     //pwm3.setPWM(servo3, 0, i);
+     delay(delayer);
+   }
+}
+
+//Area C (RIGHT)
+void presenceFeltC() {
+
+   for (int i = servoMinStateRelax; i <= servoMaxStateRelax; i++) {
+     //pwm1.setPWM(servo1, 0, i);
+     pwm2.setPWM(servo2, 0, i);
+     pwm3.setPWM(servo3, 0, i);
+     delay(delayer);   
+   }
+
+   for (int i = servoMaxStateRelax; i >= servoMinStateRelax; i--) {  
+     //pwm1.setPWM(servo1, 0, i);
+     pwm2.setPWM(servo2, 0, i);
+     pwm3.setPWM(servo3, 0, i);
+     delay(delayer);
+   }
+}
