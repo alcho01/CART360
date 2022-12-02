@@ -46,13 +46,13 @@ bool timeOver = false;
 
 //Delayer
 
-int delayer = 5;
+int delayer = 3;
 
 
 /* PIR SENSOR */
 
 //Set pin for PIR Sensor
-int PIR_SENSOR_PIN = 0;
+int PIR_SENSOR_PIN = 3;
 
 //No motion at the start of the program
 int currentMovementState = true;
@@ -178,8 +178,12 @@ void setup() {
 void loop() {
   relaxed();
   panic();
+  panicPart2();
+  panicPart3();
+  panicPart4();
   checkForMovement();
   checkForVibration();
+ //areaAAlarm();
 }
 
 /* ALARMS */
@@ -269,6 +273,8 @@ void checkForMovement() {
   //Check to see if the input is high
   if (value == HIGH) {
     panicAlarm();
+    //panic();
+    delayer = 1;
    //Count the millis when the panic state activates
    timeTurnedLowServo1 = millis();
    checkTimerActivationServo1 = true;
@@ -307,7 +313,7 @@ void checkForMovement() {
 
 void checkForVibration() {
   
-  int sensorVibReading1 = analogRead(diskPin1);
+  int sensorVibReading1 = analogRead(A0);
   Serial.print("Threshold1: ");
   Serial.println(sensorVibReading1);
 
@@ -317,9 +323,9 @@ void checkForVibration() {
      presenceFeltA();     
   }
 
-  delay(100);
+  delay(2);
 
-  int sensorVibReading2 = analogRead(diskPin2);
+  int sensorVibReading2 = analogRead(A3);
   Serial.print("Threshold2: ");
   Serial.println(sensorVibReading2);
 
@@ -329,9 +335,9 @@ void checkForVibration() {
      presenceFeltB();
   }
 
-  delay(100);
+  delay(2);
 
-  int sensorVibReading3 = analogRead(diskPin3);
+  int sensorVibReading3 = analogRead(A7);
   Serial.print("Threshold3: ");
   Serial.println(sensorVibReading3);
 
@@ -341,7 +347,7 @@ void checkForVibration() {
      presenceFeltC();
   } 
 
-  delay(100);
+  delay(2);
   
 }
 
@@ -377,7 +383,7 @@ void relaxed() {
 
 void panic() {
   
-  if (checkTimerActivationServo1 == true && (millis() - timeTurnedLowServo1) > timeAfterStatePanicServo1) {
+  if (checkTimerActivationServo1 == true && timeTurnedLowServo1 > timeAfterStatePanicServo1) {
     Serial.println("Activate Panic Servo1");
 
     timeTurnedLowServo2 = millis();
@@ -398,63 +404,68 @@ void panic() {
      delay(delayer);
    }
   }
+ }
 
-    if (checkTimerActivationServo2 == true && (millis() - timeTurnedLowServo2) > timeAfterStatePanicServo2) {
+void panicPart2() {
+    if (checkTimerActivationServo2 == true &&  timeTurnedLowServo1 > timeAfterStatePanicServo2) {
     Serial.println("Activate Panic Servo2");
 
     timeTurnedLowServo3 = millis();
     checkTimerActivationServo3 = true;
     delayer = 1; 
 
-   for (int i = servoMinStatePanic; i <= servoMaxStatePanic ; i++) {
+   for (int i = 200; i <= 300 ; i++) {
      pwm1.setPWM(servo1, 0, i);
      pwm2.setPWM(servo2, 0, i);
     // pwm3.setPWM(servo3, 0, i);
      delay(delayer);   
    }
 
-   for (int i = servoMaxStatePanic ; i >= servoMinStatePanic; i--) {  
+   for (int i = 300 ; i >= 200; i--) {  
      pwm1.setPWM(servo1, 0, i);
      pwm2.setPWM(servo2, 0, i);
    //  pwm3.setPWM(servo3, 0, i);
      delay(delayer);
    }
   }
+}
 
-    if (checkTimerActivationServo3 == true && (millis() - timeTurnedLowServo3) > timeAfterStatePanicServo3) {
+void panicPart3() {
+    if (checkTimerActivationServo3 == true && timeTurnedLowServo1 > timeAfterStatePanicServo3) {
     Serial.println("Activate Panic Servo3");
 
     timeOverFinisher = millis();
     timeOver = true;
-    delayer = 1; 
+    delayer = 5; 
 
-   for (int i = servoMinStatePanic; i <= servoMaxStatePanic ; i++) {
+   for (int i = 40; i <= 180 ; i++) {
      pwm1.setPWM(servo1, 0, i);
      pwm2.setPWM(servo2, 0, i);
      pwm3.setPWM(servo3, 0, i);
      delay(delayer);   
    }
 
-   for (int i = servoMaxStatePanic ; i >= servoMinStatePanic; i--) {  
+   for (int i = 180 ; i >= 40; i--) {  
      pwm1.setPWM(servo1, 0, i);
      pwm2.setPWM(servo2, 0, i);
      pwm3.setPWM(servo3, 0, i);
      delay(delayer);
    }
   }
-  
-  if (timeOver == true && (timeOverFinisher - previousTime) > timeFinisher) {
-    Serial.println("stop");
-   delayer = 5; 
-    
-   checkTimerActivationServo1 = false;
-   checkTimerActivationServo2 = false;
-   checkTimerActivationServo3 = false; 
+}
 
-   previousTime = timeTurnedLowServo1;
-   previousTime = timeTurnedLowServo2;
-   previousTime = timeTurnedLowServo3;
-   previousTime = timeOverFinisher;
+  void panicPart4() {
+  
+  if (timeOver == true && timeTurnedLowServo1 > timeFinisher) {
+    Serial.println("stop");
+   delayer = 3; 
+
+  checkTimerActivationServo1 = false;
+  checkTimerActivationServo2 = false;
+  checkTimerActivationServo3 = false;
+  timeOver = false;
+
+  timeTurnedLowServo1 = millis();
   }
 }
 
@@ -501,18 +512,18 @@ void presenceFeltB() {
    }
 }
 
-//Area C (RIGHT)
+//Area C (RIGHT)*
 void presenceFeltC() {
 
    for (int i = servoMinStateRelax; i <= servoMaxStateRelax; i++) {
-     //pwm1.setPWM(servo1, 0, i);
+     pwm1.setPWM(servo1, 0, i);
      pwm2.setPWM(servo2, 0, i);
      pwm3.setPWM(servo3, 0, i);
      delay(delayer);   
    }
 
    for (int i = servoMaxStateRelax; i >= servoMinStateRelax; i--) {  
-     //pwm1.setPWM(servo1, 0, i);
+     pwm1.setPWM(servo1, 0, i);
      pwm2.setPWM(servo2, 0, i);
      pwm3.setPWM(servo3, 0, i);
      delay(delayer);
